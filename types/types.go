@@ -6,7 +6,11 @@ type MultiSearch struct {
 }
 
 type Options struct {
-	Pattern string
-	Offset  int64
-	Limit   int64
+	Pattern         string
+	ShowFilename    bool
+	ShowLineNumbers bool
+	ShowByteOffset  bool
+	Stats           bool
+	SkipBytes       int64
+	Limit           int64
 }

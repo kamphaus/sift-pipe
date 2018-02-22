@@ -2,19 +2,15 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
 	"os"
-	"runtime"
-	"sync"
-
-	"strings"
-
 	"os/exec"
-
 	"path/filepath"
+	"runtime"
+	"strings"
+	"sync"
 
 	"github.com/kamphaus/sift"
 	"github.com/kamphaus/sift-pipe/types"
@@ -35,27 +31,32 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("Read from stdin: ", string(inb))
+	//fmt.Println("Read from stdin: ", string(inb))
 	var ms types.MultiSearch
 	err = json.Unmarshal(inb, &ms)
 	if err != nil {
 		panic(err)
 	}
-	tmp, err := json.Marshal(ms)
+	/*tmp, err := json.Marshal(ms)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("Check: " + string(tmp))
+	fmt.Println("Check: " + string(tmp))*/
 	if len(ms.Search) == 0 {
 		errorLogger.Fatalf("Nothing to search")
 	}
 	runtime.GOMAXPROCS(len(ms.Search))
 	var cmd *exec.Cmd
 	var input io.ReadCloser
-	var output io.Writer
+	var output io.WriteCloser
+	// for testing purpose: allow calling a different program that provides an infinite stream of strings
 	if len(ms.Targets) == 1 && isInfiniStream(ms.Targets[0]) {
 		cmd = exec.Command(ms.Targets[0])
 		cmd.Stderr = os.Stderr
+		if err != nil {
+			panic(err)
+		}
+		input, err = cmd.StdoutPipe()
 		if err != nil {
 			panic(err)
 		}
@@ -63,7 +64,6 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		input, err = cmd.StdoutPipe()
 		defer cmd.Process.Kill()
 	}
 	var rets = make([]int, len(ms.Search))
@@ -75,12 +75,16 @@ func main() {
 			output = pipeOut
 		}
 		var targets []string
+		showFilename := "off"
+		if s.ShowFilename {
+			showFilename = "on"
+		}
 		search := sift.NewSearch(&sift.Options{
 			BinarySkip:        false,
 			BinaryAsText:      false,
 			Blocksize:         "",
 			Color:             "off",
-			Cores:             8,
+			Cores:             1,
 			IncludeDirs:       nil,
 			ErrShowLineLength: false,
 			ErrSkipLineLength: false,
@@ -110,15 +114,16 @@ func main() {
 			OutputLimit:       0,
 			OutputUnixPath:    false,
 			Recursive:         true,
-			ShowFilename:      "off",
-			ShowLineNumbers:   false,
+			ShowFilename:      showFilename,
+			ShowLineNumbers:   s.ShowLineNumbers,
 			ShowColumnNumbers: false,
-			ShowByteOffset:    false,
-			Stats:             false,
+			ShowByteOffset:    s.ShowByteOffset,
+			Stats:             s.Stats,
 			TargetsOnly:       false,
 			WordRegexp:        false,
 			Zip:               false,
 			Patterns:          []string{s.Pattern},
+			SkipBytes:         s.SkipBytes,
 		}, input, output, errorLogger)
 		input = pipeIn
 
