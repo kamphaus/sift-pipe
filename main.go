@@ -121,7 +121,7 @@ func main() {
 			Stats:             s.Stats,
 			TargetsOnly:       false,
 			WordRegexp:        false,
-			Zip:               false,
+			Zip:               true,
 			Patterns:          []string{s.Pattern},
 			SkipBytes:         s.SkipBytes,
 		}, input, output, errorLogger)
