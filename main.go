@@ -154,6 +154,9 @@ func main() {
 		}(i)
 	}
 	waitGroup.Wait()
+	if cmd != nil {
+		cmd.Process.Kill()
+	}
 	for _, val := range rets {
 		if val != 0 {
 			os.Exit(val)
