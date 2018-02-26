@@ -82,7 +82,7 @@ func main() {
 		search := sift.NewSearch(&sift.Options{
 			BinarySkip:        false,
 			BinaryAsText:      false,
-			Blocksize:         "",
+			Blocksize:         "1M",
 			Color:             "off",
 			Cores:             1,
 			IncludeDirs:       nil,
